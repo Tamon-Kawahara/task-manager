@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
 
 class User extends Authenticatable
 {
@@ -42,4 +44,22 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+        /**
+     * ユーザーが持つタスク一覧
+     *
+     * 1ユーザー : 多数タスク の「1対多」リレーション
+     */
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
+    }
+
+    /**
+     * 管理者かどうかを判定するヘルパーメソッド
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
 }
