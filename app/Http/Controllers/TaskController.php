@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Task;
+use App\Models\User;
 
 class TaskController extends Controller
 {
@@ -12,6 +14,7 @@ class TaskController extends Controller
     public function index()
     {
         // ログイン中のユーザーを取得
+        /** @var User $user */
         $user = auth()->user();
 
         // ログイン中ユーザーのタスクを新しい順に10件ずつ取得
@@ -28,7 +31,8 @@ class TaskController extends Controller
      */
     public function create()
     {
-        //
+        // 単純に「入力フォーム画面」を返すだけ
+        return view('tasks.create');
     }
 
     /**
@@ -36,7 +40,23 @@ class TaskController extends Controller
      */
     public function store(Request $request)
     {
-        //
+
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+
+        // バリデーション
+        $validated = $request->validate([
+            'title'       => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'priority'    => 'required|integer|in:1,2,3',
+            'due_date'    => 'nullable|date',
+        ]);
+
+        // タスク作成
+        $user->tasks()->create($validated);
+
+        // 完了後のリダイレクト
+        return redirect()->route('tasks.index')->with('success', 'タスクを作成しました。');
     }
 
     /**

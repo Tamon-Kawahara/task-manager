@@ -1,5 +1,3 @@
-{{-- resources/views/tasks/index.blade.php --}}
-
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
@@ -27,23 +25,37 @@
                                 </tr>
                             </thead>
                             <tbody>
+
+                                @php
+                                    $priorityLabels = [
+                                        1 => '低',
+                                        2 => '中',
+                                        3 => '高',
+                                    ];
+                                @endphp
+
                                 @foreach ($tasks as $task)
                                     <tr>
                                         <td class="px-4 py-2 border-b">
                                             {{ $task->title }}
                                         </td>
+
                                         <td class="px-4 py-2 border-b">
                                             {{ $task->status }}
                                         </td>
+
                                         <td class="px-4 py-2 border-b">
-                                            {{ $task->priority }}
+                                            {{ $priorityLabels[$task->priority] ?? '-' }}
                                         </td>
+
                                         <td class="px-4 py-2 border-b">
                                             {{ optional($task->due_date)->format('Y-m-d') ?? '-' }}
                                         </td>
                                     </tr>
                                 @endforeach
+
                             </tbody>
+
                         </table>
 
                         <div class="mt-4">
