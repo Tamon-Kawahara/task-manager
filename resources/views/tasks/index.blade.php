@@ -23,7 +23,7 @@
                             <form method="GET" action="{{ route('tasks.index') }}" class="flex gap-2">
                                 <input type="text" name="keyword" placeholder="タイトルで検索"
                                     value="{{ request('keyword') }}" class="border rounded px-3 py-1 w-64">
-                                <select name="status" class="border rounded px-2 py-1">
+                                <select name="status" class="border rounded px-2 py-1 pr-8">
                                     <option value="">ステータスを選択</option>
                                     <option value="not_started"
                                         {{ request('status') === 'not_started' ? 'selected' : '' }}>未着手</option>
@@ -31,6 +31,16 @@
                                         {{ request('status') === 'in_progress' ? 'selected' : '' }}>進行中</option>
                                     <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>
                                         完了</option>
+                                </select>
+                                {{-- ★ 優先度絞り込みを追加 --}}
+                                <select name="priority" class="border rounded px-2 py-1 pr-8">
+                                    <option value="">優先度</option>
+                                    <option value="1" {{ request('priority') === '1' ? 'selected' : '' }}>低
+                                    </option>
+                                    <option value="2" {{ request('priority') === '2' ? 'selected' : '' }}>中
+                                    </option>
+                                    <option value="3" {{ request('priority') === '3' ? 'selected' : '' }}>高
+                                    </option>
                                 </select>
 
                                 <button class="px-4 py-1 bg-blue-600 text-white rounded">検索</button>

@@ -39,6 +39,12 @@ class TaskController extends Controller
             $query->where('status', $status);
         }
 
+        // 優先度絞り込み
+        if ($request->filled('priority')) {
+            $priority = (int) $request->priority;
+            $query->where('priority', $priority);
+        }
+
         // 最後にページネーションをかける
         $tasks = $query
             ->paginate(10)       // 1ページ10件
