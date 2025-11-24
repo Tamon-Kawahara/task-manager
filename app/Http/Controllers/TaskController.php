@@ -11,16 +11,38 @@ class TaskController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // ログイン中のユーザーを取得
+    // ログイン中のユーザーを取得
         /** @var User $user */
         $user = auth()->user();
 
-        // ログイン中ユーザーのタスクを新しい順に10件ずつ取得
-        $tasks = $user->tasks()
-            ->latest()          // created_at の新しい順
-            ->paginate(10);     // 1ページ10件でページネーション
+        // まずは「ベースとなるクエリ」を作っておく
+        $query = $user->tasks()
+            ->latest();   // created_at の新しい順
+
+        // キーワード検索（タイトル）
+        if ($request->filled('keyword')) {
+            $keyword = $request->input('keyword');
+
+            $query->where('title', 'LIKE', "%{$keyword}%");
+            // 必要なら description も含められる：
+            // $query->where(function ($q) use ($keyword) {
+            //     $q->where('title', 'LIKE', "%{$keyword}%")
+            //       ->orWhere('description', 'LIKE', "%{$keyword}%");
+            // });
+        }
+
+        // ★ ステータス絞り込みを追加
+        if ($request->filled('status')) {
+            $status = $request->input('status');  // not_started / in_progress / completed のどれか
+            $query->where('status', $status);
+        }
+
+        // 最後にページネーションをかける
+        $tasks = $query
+            ->paginate(10)       // 1ページ10件
+            ->withQueryString(); // 検索条件をURLに維持したままページング
 
         // resources/views/tasks/index.blade.php にデータを渡して表示
         return view('tasks.index', compact('tasks'));

@@ -19,6 +19,24 @@
                     @if ($tasks->count() === 0)
                         <p>まだタスクがありません。</p>
                     @else
+                        <div class="mb-4 flex justify-end">
+                            <form method="GET" action="{{ route('tasks.index') }}" class="flex gap-2">
+                                <input type="text" name="keyword" placeholder="タイトルで検索"
+                                    value="{{ request('keyword') }}" class="border rounded px-3 py-1 w-64">
+                                <select name="status" class="border rounded px-2 py-1">
+                                    <option value="">ステータスを選択</option>
+                                    <option value="not_started"
+                                        {{ request('status') === 'not_started' ? 'selected' : '' }}>未着手</option>
+                                    <option value="in_progress"
+                                        {{ request('status') === 'in_progress' ? 'selected' : '' }}>進行中</option>
+                                    <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>
+                                        完了</option>
+                                </select>
+
+                                <button class="px-4 py-1 bg-blue-600 text-white rounded">検索</button>
+                            </form>
+                        </div>
+
                         <table class="min-w-full text-left text-sm">
                             <thead>
                                 <tr>
