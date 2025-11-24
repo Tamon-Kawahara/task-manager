@@ -114,8 +114,21 @@ class TaskController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Task $task)
     {
-        //
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+
+        // 他人のタスク削除を阻止
+        if ($task->user_id !== $user->id) {
+            abort(403);
+        }
+
+        // ソフトデリート（trash へ移動）
+        $task->delete();
+
+        return redirect()
+            ->route('tasks.index')
+            ->with('success', 'タスクを削除しました。');
     }
 }
