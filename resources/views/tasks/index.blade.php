@@ -10,7 +10,11 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
 
-                    {{-- フラッシュメッセージなどを後でここに出しても良い --}}
+                    @if (session('success'))
+                        <div class="mb-4 text-green-700">
+                            {{ session('success') }}
+                        </div>
+                    @endif
 
                     @if ($tasks->count() === 0)
                         <p>まだタスクがありません。</p>
@@ -22,6 +26,7 @@
                                     <th class="px-4 py-2 border-b">ステータス</th>
                                     <th class="px-4 py-2 border-b">優先度</th>
                                     <th class="px-4 py-2 border-b">期限</th>
+                                    <th class="px-4 py-2 border-b"></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -50,6 +55,12 @@
 
                                         <td class="px-4 py-2 border-b">
                                             {{ optional($task->due_date)->format('Y-m-d') ?? '-' }}
+                                        </td>
+                                        <td class="px-4 py-2 border-b">
+                                            <a href="{{ route('tasks.edit', $task->id) }}"
+                                                class="inline-block px-3 py-1 border rounded text-sm hover:bg-gray-100">
+                                                編集
+                                            </a>
                                         </td>
                                     </tr>
                                 @endforeach
