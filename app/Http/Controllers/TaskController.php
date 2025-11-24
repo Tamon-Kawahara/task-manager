@@ -31,8 +31,9 @@ class TaskController extends Controller
      */
     public function create()
     {
-        // 単純に「入力フォーム画面」を返すだけ
-        return view('tasks.create');
+        $statusOptions = Task::statusOptions();
+
+        return view('tasks.create', compact('statusOptions'));
     }
 
     /**
@@ -50,7 +51,11 @@ class TaskController extends Controller
             'description' => 'nullable|string',
             'priority'    => 'required|integer|in:1,2,3',
             'due_date'    => 'nullable|date',
+            'status'      => 'required|string|in:' . implode(',', array_keys(Task::statusOptions())),
         ]);
+
+        // デフォルトで status が無い場合の保険（ほぼ来ないけど念のため）
+        $validated['status'] = $validated['status'] ?? Task::STATUS_NOT_STARTED;
 
         // タスク作成
         $user->tasks()->create($validated);
@@ -77,8 +82,10 @@ class TaskController extends Controller
             abort(403);
         }
 
+        $statusOptions = Task::statusOptions();
+
         // 編集フォーム用のビューに Task を渡す
-        return view('tasks.edit', compact('task'));
+        return view('tasks.edit', compact('task', 'statusOptions'));
     }
 
     /**
@@ -100,6 +107,7 @@ class TaskController extends Controller
             'description' => 'nullable|string',
             'priority'    => 'required|integer|in:1,2,3',
             'due_date'    => 'nullable|date',
+            'status'      => 'required|string|in:' . implode(',', array_keys(Task::statusOptions())),
         ]);
 
         // 更新
@@ -130,5 +138,33 @@ class TaskController extends Controller
         return redirect()
             ->route('tasks.index')
             ->with('success', 'タスクを削除しました。');
+    }
+
+    /**
+     * タスクのステータスだけを更新するアクション
+     */
+    public function updateStatus(Request $request, Task $task)
+    {
+        /** @var User $user */
+        $user = auth()->user();
+
+        // 他人のタスクを触らせない
+        if ($task->user_id !== $user->id) {
+            abort(403);
+        }
+
+        // ステータスのバリデーション
+        $validated = $request->validate([
+            'status' => 'required|string|in:' . implode(',', array_keys(Task::statusOptions())),
+        ]);
+
+        // ステータスだけ更新
+        $task->update([
+            'status' => $validated['status'],
+        ]);
+
+        return redirect()
+            ->route('tasks.index')
+            ->with('success', 'ステータスを更新しました。');
     }
 }

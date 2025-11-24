@@ -28,36 +28,46 @@
 
                         <div class="mb-4">
                             <label class="block text-sm font-medium">タイトル</label>
-                            <input type="text" name="title"
-                                   class="border rounded w-full p-2"
-                                   value="{{ old('title', $task->title) }}">
+                            <input type="text" name="title" class="border rounded w-full p-2"
+                                value="{{ old('title', $task->title) }}">
                         </div>
 
                         <div class="mb-4">
                             <label class="block text-sm font-medium">詳細</label>
-                            <textarea name="description"
-                                      class="border rounded w-full p-2"
-                                      rows="4">{{ old('description', $task->description) }}</textarea>
+                            <textarea name="description" class="border rounded w-full p-2" rows="4">{{ old('description', $task->description) }}</textarea>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium">ステータス</label>
+                            <select name="status" class="border rounded w-full p-2">
+                                @foreach ($statusOptions as $value => $label)
+                                    <option value="{{ $value }}"
+                                        {{ old('status', $task->status) === $value ? 'selected' : '' }}>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
 
                         <div class="mb-4">
                             <label class="block text-sm font-medium">優先度</label>
                             <select name="priority" class="border rounded w-full p-2">
-                                <option value="3" {{ old('priority', $task->priority) == 3 ? 'selected' : '' }}>高</option>
-                                <option value="2" {{ old('priority', $task->priority) == 2 ? 'selected' : '' }}>中</option>
-                                <option value="1" {{ old('priority', $task->priority) == 1 ? 'selected' : '' }}>低</option>
+                                <option value="3" {{ old('priority', $task->priority) == 3 ? 'selected' : '' }}>高
+                                </option>
+                                <option value="2" {{ old('priority', $task->priority) == 2 ? 'selected' : '' }}>中
+                                </option>
+                                <option value="1" {{ old('priority', $task->priority) == 1 ? 'selected' : '' }}>低
+                                </option>
                             </select>
                         </div>
 
                         <div class="mb-4">
                             <label class="block text-sm font-medium">期限</label>
-                            <input type="date" name="due_date"
-                                   class="border rounded w-full p-2"
-                                   value="{{ old('due_date', optional($task->due_date)->format('Y-m-d')) }}">
+                            <input type="date" name="due_date" class="border rounded w-full p-2"
+                                value="{{ old('due_date', optional($task->due_date)->format('Y-m-d')) }}">
                         </div>
 
-                        <button type="submit"
-                                class="px-4 py-2 bg-blue-600 text-black rounded hover:bg-blue-700">
+                        <button type="submit" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-blue-700">
                             更新する
                         </button>
                     </form>

@@ -33,6 +33,19 @@
                             <tbody>
 
                                 @php
+                                    $statusColors = [
+                                        \App\Models\Task::STATUS_NOT_STARTED => 'bg-gray-200 text-gray-800',
+                                        \App\Models\Task::STATUS_IN_PROGRESS => 'bg-blue-200 text-blue-800',
+                                        \App\Models\Task::STATUS_COMPLETED => 'bg-green-200 text-green-800',
+                                    ];
+
+                                    // 現在のステータス → 次のステータス
+                                    $nextStatusMap = [
+                                        \App\Models\Task::STATUS_NOT_STARTED => \App\Models\Task::STATUS_IN_PROGRESS, // 未着手 → 進行中
+                                        \App\Models\Task::STATUS_IN_PROGRESS => \App\Models\Task::STATUS_COMPLETED, // 進行中 → 完了
+                                        \App\Models\Task::STATUS_COMPLETED => \App\Models\Task::STATUS_NOT_STARTED, // 完了 → 未着手
+                                    ];
+
                                     $priorityLabels = [
                                         1 => '低',
                                         2 => '中',
@@ -47,7 +60,25 @@
                                         </td>
 
                                         <td class="px-4 py-2 border-b">
-                                            {{ $task->status }}
+                                            @php
+                                                $statusClass =
+                                                    $statusColors[$task->status] ?? 'bg-gray-100 text-gray-800';
+                                                $nextStatus = $nextStatusMap[$task->status] ?? Task::STATUS_NOT_STARTED;
+                                            @endphp
+
+                                            <form method="POST" action="{{ route('tasks.updateStatus', $task->id) }}"
+                                                class="inline">
+                                                @csrf
+                                                @method('PATCH')
+
+                                                <input type="hidden" name="status" value="{{ $nextStatus }}">
+
+                                                {{-- バッジ風ボタン：クリックすると次のステータスに更新 --}}
+                                                <button type="submit"
+                                                    class="px-2 py-1 rounded text-xs {{ $statusClass }}">
+                                                    {{ $task->status_label }}
+                                                </button>
+                                            </form>
                                         </td>
 
                                         <td class="px-4 py-2 border-b">

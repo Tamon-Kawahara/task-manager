@@ -37,6 +37,18 @@
                         </div>
 
                         <div class="mb-4">
+                            <label class="block text-sm font-medium">ステータス</label>
+                            <select name="status" class="border rounded w-full p-2">
+                                @foreach ($statusOptions as $value => $label)
+                                    <option value="{{ $value }}"
+                                        {{ old('status', \App\Models\Task::STATUS_NOT_STARTED) === $value ? 'selected' : '' }}>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
                             <label class="block text-sm font-medium">優先度</label>
                             <select name="priority" class="border rounded w-full p-2">
                                 <option value="3" {{ old('priority') == 3 ? 'selected' : '' }}>高</option>
@@ -51,7 +63,7 @@
                             <input type="date" name="due_date" class="border rounded w-full p-2">
                         </div>
 
-                        <button type="submit" class="px-4 py-2 bg-blue-600 text-black rounded hover:bg-blue-700">
+                        <button type="submit" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-blue-700">
                             保存
                         </button>
                     </form>

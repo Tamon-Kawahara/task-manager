@@ -18,4 +18,10 @@ export default {
     },
 
     plugins: [forms],
+        safelist: [
+        'bg-gray-200', 'text-gray-800',
+        'bg-blue-200', 'text-blue-800',
+        'bg-green-200', 'text-green-800',
+        'bg-gray-100',
+    ],
 };

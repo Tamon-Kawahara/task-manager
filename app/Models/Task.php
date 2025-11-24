@@ -14,6 +14,34 @@ class Task extends Model
 {
     use HasFactory, SoftDeletes;
 
+
+    // ステータスの定数
+    public const STATUS_NOT_STARTED = 'not_started';   // 未着手
+    public const STATUS_IN_PROGRESS = 'in_progress';   // 進行中
+    public const STATUS_COMPLETED   = 'completed';     // 完了
+
+    /**
+     * ステータスの選択肢（値 => ラベル）
+     */
+    public static function statusOptions(): array
+    {
+        return [
+            self::STATUS_NOT_STARTED => '未着手',
+            self::STATUS_IN_PROGRESS => '進行中',
+            self::STATUS_COMPLETED   => '完了',
+        ];
+    }
+
+    /**
+     * ステータスのラベルを取得するアクセサ
+     *
+     * $task->status_label で「未着手 / 進行中 / 完了」が取れる
+     */
+    public function getStatusLabelAttribute(): string
+    {
+        return self::statusOptions()[$this->status] ?? '不明';
+    }
+
     /**
      * 一括代入を許可するカラム
      */
@@ -31,6 +59,7 @@ class Task extends Model
         'priority'     => 'integer',
         'due_date'     => 'date',
         'completed_at' => 'datetime',
+        'status'       => 'string',
     ];
 
     /**
