@@ -78,6 +78,13 @@
                             </form>
                         </div>
 
+                        <div class="mb-2 flex justify-end">
+                            <a href="{{ route('tasks.archive') }}"
+                                class="inline-flex items-center px-3 py-1 text-sm border rounded text-gray-700 hover:bg-gray-50">
+                                アーカイブされたタスクを見る
+                            </a>
+                        </div>
+
                         <table class="min-w-full text-left text-sm">
                             <thead>
                                 <tr>

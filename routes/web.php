@@ -10,42 +10,51 @@ use App\Http\Controllers\DashboardController;
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
 */
 
-// routes/web.php
+// ルートパスはダッシュボードにリダイレクト
 Route::get('/', function () {
     return redirect()->route('dashboard');
 });
 
-Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth'])
-    ->name('dashboard');
-
+// 認証が必要なルートを 1 つのグループにまとめる
 Route::middleware('auth')->group(function () {
+
+    // ダッシュボード
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->name('dashboard');
+
+    // プロフィール
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
 
-Route::middleware('auth')->group(function () {
-    Route::resource('tasks', TaskController::class);
+    // ▼▼▼ ここからタスク関連 ▼▼▼
 
-    // ★ ステータスだけを更新する専用ルート
+    // ★ アーカイブ一覧 & 復元
+    //   ※ Route::resource より「前」に書くのが重要！
+    Route::get('/tasks/archive', [TaskController::class, 'archiveIndex'])
+        ->name('tasks.archive');
+
+    Route::patch('/tasks/{task}/restore', [TaskController::class, 'restore'])
+        ->name('tasks.restore');
+
+    // 並び替え（ドラッグ & ドロップ）
+    Route::post('/tasks/reorder', [TaskController::class, 'reorder'])
+        ->name('tasks.reorder');
+
+    // ステータスだけを更新するルート
     Route::patch('/tasks/{task}/status', [TaskController::class, 'updateStatus'])
         ->name('tasks.updateStatus');
-});
 
-Route::middleware(['auth'])->group(function () {
+    // タスクの CRUD 一式
+    Route::resource('tasks', TaskController::class);
+
+    // ▼▼▼ タグ関連 ▼▼▼
     Route::get('/tags', [TagController::class, 'index'])->name('tags.index');
     Route::post('/tags', [TagController::class, 'store'])->name('tags.store');
     Route::delete('/tags/{tag}', [TagController::class, 'destroy'])->name('tags.destroy');
-    Route::post('/tasks/reorder', [TaskController::class, 'reorder'])
-        ->name('tasks.reorder');
 });
 
+// 認証系のルート
 require __DIR__ . '/auth.php';

@@ -276,4 +276,29 @@ class TaskController extends Controller
 
         return response()->json(['status' => 'ok']);
     }
+
+    public function archiveIndex()
+    {
+        /** @var User $user */
+        $user = auth()->user();
+
+        // 論理削除されたタスクだけ取得
+        $archivedTasks = $user->tasks()
+            ->onlyTrashed()
+            ->orderBy('deleted_at', 'desc')
+            ->get();
+
+        return view('tasks.archive', compact('archivedTasks'));
+    }
+
+    public function restore($id)
+    {
+        /** @var User $user */
+        $user = auth()->user();
+
+        $task = $user->tasks()->onlyTrashed()->findOrFail($id);
+        $task->restore();
+
+        return redirect()->route('tasks.archive')->with('success', 'タスクを復元しました。');
+    }
 }
