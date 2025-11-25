@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Task;
 use App\Models\User;
 use App\Models\Tag;
+use Illuminate\Support\Facades\DB;
 
 class TaskController extends Controller
 {
@@ -32,6 +33,10 @@ class TaskController extends Controller
         } elseif ($sort === 'priority_desc') {
             // 優先度 高い順
             $query->orderBy('priority', 'desc'); // 1:高, 3:低 なので asc
+        } elseif ($sort === 'custom') {
+            // ★ カスタム順（sort_order）
+            $query->orderBy('sort_order', 'asc')
+                ->orderBy('created_at', 'desc');
         } else {
             // デフォルト：作成日の新しい順
             $query->latest();
@@ -236,5 +241,31 @@ class TaskController extends Controller
         return redirect()
             ->route('tasks.index')
             ->with('success', 'ステータスを更新しました。');
+    }
+
+    public function reorder(Request $request)
+    {
+        /** @var User $user */
+        $user = auth()->user();
+
+        $data = $request->validate([
+            'order'   => 'required|array',
+            'order.*' => 'integer',
+        ]);
+
+        $order = $data['order'];
+
+        DB::transaction(function () use ($order, $user) {
+            foreach ($order as $index => $taskId) {
+                $task = $user->tasks()->where('id', $taskId)->first();
+
+                if ($task) {
+                    $task->sort_order = $index + 1; // 1,2,3,...
+                    $task->save();
+                }
+            }
+        });
+
+        return response()->json(['status' => 'ok']);
     }
 }

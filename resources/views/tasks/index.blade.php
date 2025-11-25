@@ -63,6 +63,9 @@
                                         期限が遠い順</option>
                                     <option value="priority_desc"
                                         {{ ($sort ?? '') === 'priority_desc' ? 'selected' : '' }}>優先度が高い順</option>
+                                    <option value="custom" {{ ($sort ?? '') === 'custom' ? 'selected' : '' }}>
+                                        カスタム順（ドラッグ）</option>
+                                </select>
                                 </select>
 
                                 <button class="px-4 py-1 bg-blue-600 text-white rounded">検索</button>
@@ -72,6 +75,7 @@
                         <table class="min-w-full text-left text-sm">
                             <thead>
                                 <tr>
+                                    <th class="px-4 py-2 border-b w-8"></th> {{-- ドラッグハンドル --}}
                                     <th class="px-4 py-2 border-b">タイトル</th>
                                     <th class="px-4 py-2 border-b">ステータス</th>
                                     <th class="px-4 py-2 border-b">優先度</th>
@@ -81,7 +85,7 @@
                                     <th class="px-4 py-2 border-b"></th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="task-table-body"> {{-- ★ ← ここに id を追加！！ --}}
 
                                 @php
                                     $statusColors = [
@@ -90,11 +94,10 @@
                                         \App\Models\Task::STATUS_COMPLETED => 'bg-green-200 text-green-800',
                                     ];
 
-                                    // 現在のステータス → 次のステータス
                                     $nextStatusMap = [
-                                        \App\Models\Task::STATUS_NOT_STARTED => \App\Models\Task::STATUS_IN_PROGRESS, // 未着手 → 進行中
-                                        \App\Models\Task::STATUS_IN_PROGRESS => \App\Models\Task::STATUS_COMPLETED, // 進行中 → 完了
-                                        \App\Models\Task::STATUS_COMPLETED => \App\Models\Task::STATUS_NOT_STARTED, // 完了 → 未着手
+                                        \App\Models\Task::STATUS_NOT_STARTED => \App\Models\Task::STATUS_IN_PROGRESS,
+                                        \App\Models\Task::STATUS_IN_PROGRESS => \App\Models\Task::STATUS_COMPLETED,
+                                        \App\Models\Task::STATUS_COMPLETED => \App\Models\Task::STATUS_NOT_STARTED,
                                     ];
 
                                     $priorityLabels = [
@@ -105,7 +108,14 @@
                                 @endphp
 
                                 @foreach ($tasks as $task)
-                                    <tr>
+                                    {{-- ★ 各行に「data-task-id」追加 --}}
+                                    <tr data-task-id="{{ $task->id }}">
+
+                                        {{-- ★ ドラッグハンドル列を追加（必ず1列目に入れる） --}}
+                                        <td class="px-2 py-2 border-b cursor-move text-gray-400 text-lg drag-handle">
+                                            ☰
+                                        </td>
+
                                         <td class="px-4 py-2 border-b">
                                             {{ $task->title }}
                                         </td>
@@ -124,7 +134,6 @@
 
                                                 <input type="hidden" name="status" value="{{ $nextStatus }}">
 
-                                                {{-- バッジ風ボタン：クリックすると次のステータスに更新 --}}
                                                 <button type="submit"
                                                     class="px-2 py-1 rounded text-xs {{ $statusClass }}">
                                                     {{ $task->status_label }}
@@ -163,7 +172,7 @@
                                                 {{ $dueDate ? $dueDate->format('Y-m-d') : '-' }}
                                             </span>
                                         </td>
-                                        
+
                                         <td class="px-4 py-2 border-b">
                                             @forelse ($task->tags as $tag)
                                                 <span class="inline-block px-2 py-0.5 text-xs rounded bg-gray-200 mr-1">
@@ -173,12 +182,14 @@
                                                 <span class="text-xs text-gray-400">なし</span>
                                             @endforelse
                                         </td>
+
                                         <td class="px-4 py-2 border-b">
                                             <a href="{{ route('tasks.edit', $task->id) }}"
                                                 class="inline-block px-3 py-1 border rounded text-sm hover:bg-gray-100">
                                                 編集
                                             </a>
                                         </td>
+
                                         <td class="px-4 py-2 border-b">
                                             <form action="{{ route('tasks.destroy', $task->id) }}" method="POST"
                                                 class="inline-block ml-2" onsubmit="return confirm('本当に削除しますか？');">
@@ -190,10 +201,11 @@
                                                 </button>
                                             </form>
                                         </td>
+
                                     </tr>
                                 @endforeach
 
-                            </tbody>
+                            </tbody> {{-- ★ id="task-table-body" の閉じタグ --}}
 
                         </table>
 
@@ -206,4 +218,50 @@
             </div>
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tbody = document.getElementById('task-table-body');
+            const sortSelect = document.querySelector('select[name="sort"]');
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            if (!tbody || !sortSelect) return;
+
+            // 「カスタム順」のときだけドラッグ有効
+            if (sortSelect.value !== 'custom') {
+                return;
+            }
+
+            new Sortable(tbody, {
+                handle: '.drag-handle',
+                animation: 150,
+                onEnd: function() {
+                    const order = Array.from(tbody.querySelectorAll('tr'))
+                        .map(row => row.dataset.taskId);
+
+                    fetch('{{ route('tasks.reorder') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            order
+                        }),
+                    }).then(res => {
+                        // 失敗してたらコンソールに出すくらいはしておく
+                        if (!res.ok) {
+                            console.error('Failed to save order');
+                        }
+                    }).catch(err => {
+                        console.error(err);
+                    });
+                }
+            });
+        });
+    </script>
+
 </x-app-layout>
