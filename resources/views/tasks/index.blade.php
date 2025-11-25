@@ -43,6 +43,17 @@
                                     </option>
                                 </select>
 
+                                {{-- ★ タグ絞り込みを追加 --}}
+                                <select name="tag_id" class="border rounded px-2 py-1 pr-8">
+                                    <option value="">タグ</option>
+                                    @foreach ($tags as $tag)
+                                        <option value="{{ $tag->id }}"
+                                            {{ (int) ($tagId ?? 0) === $tag->id ? 'selected' : '' }}>
+                                            {{ $tag->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+
                                 <button class="px-4 py-1 bg-blue-600 text-white rounded">検索</button>
                             </form>
                         </div>
@@ -54,6 +65,7 @@
                                     <th class="px-4 py-2 border-b">ステータス</th>
                                     <th class="px-4 py-2 border-b">優先度</th>
                                     <th class="px-4 py-2 border-b">期限</th>
+                                    <th class="px-4 py-2 border-b">タグ</th>
                                     <th class="px-4 py-2 border-b"></th>
                                     <th class="px-4 py-2 border-b"></th>
                                 </tr>
@@ -115,6 +127,15 @@
 
                                         <td class="px-4 py-2 border-b">
                                             {{ optional($task->due_date)->format('Y-m-d') ?? '-' }}
+                                        </td>
+                                        <td class="px-4 py-2 border-b">
+                                            @forelse ($task->tags as $tag)
+                                                <span class="inline-block px-2 py-0.5 text-xs rounded bg-gray-200 mr-1">
+                                                    {{ $tag->name }}
+                                                </span>
+                                            @empty
+                                                <span class="text-xs text-gray-400">なし</span>
+                                            @endforelse
                                         </td>
                                         <td class="px-4 py-2 border-b">
                                             <a href="{{ route('tasks.edit', $task->id) }}"

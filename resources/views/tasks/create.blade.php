@@ -63,6 +63,35 @@
                             <input type="date" name="due_date" class="border rounded w-full p-2">
                         </div>
 
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium">タグ</label>
+
+                            @php
+                                $selectedTagIds = old('tags', []);
+                            @endphp
+
+                            <select name="tags[]" multiple class="border rounded w-full p-2">
+                                @foreach ($tags as $tag)
+                                    <option value="{{ $tag->id }}"
+                                        {{ in_array($tag->id, $selectedTagIds) ? 'selected' : '' }}>
+                                        {{ $tag->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+
+                            <p class="text-xs text-gray-500 mt-1">
+                                Ctrl / Cmd を押しながらクリックで複数選択できます。
+                            </p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                必要なタグが見つからない場合は
+                                <a href="{{ route('tags.index') }}" class="text-blue-600 underline">
+                                    タグ管理ページ
+                                </a>
+                                から追加できます。
+                            </p>
+
+                        </div>
+
                         <button type="submit" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-blue-700">
                             保存
                         </button>

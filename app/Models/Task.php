@@ -79,6 +79,7 @@ class Task extends Model
      */
     public function tags(): BelongsToMany
     {
-        return $this->belongsToMany(Tag::class);
+        // 第2引数はテーブル名。'tag_task' で作ってるので明示しておく。
+        return $this->belongsToMany(Tag::class, 'tag_task')->withTimestamps();
     }
 }

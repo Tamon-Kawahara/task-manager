@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Task;
 use App\Models\User;
+use App\Models\Tag;
 
 class TaskController extends Controller
 {
@@ -19,6 +20,7 @@ class TaskController extends Controller
 
         // まずは「ベースとなるクエリ」を作っておく
         $query = $user->tasks()
+            ->with('tags')   // タグを同時にロードして N+1 回避
             ->latest();   // created_at の新しい順
 
         // キーワード検索（タイトル）
@@ -45,13 +47,28 @@ class TaskController extends Controller
             $query->where('priority', $priority);
         }
 
+        // タグ絞り込み
+        $tagId = $request->input('tag_id');   // フォーム側の <select name="tag_id">
+        if (!empty($tagId)) {
+            $query->whereHas('tags', function ($q) use ($tagId) {
+                $q->where('tags.id', $tagId);
+            });
+        }
+
         // 最後にページネーションをかける
         $tasks = $query
             ->paginate(10)       // 1ページ10件
             ->withQueryString(); // 検索条件をURLに維持したままページング
 
+        // タグ一覧（セレクトボックス用）
+        $tags = Tag::orderBy('name')->get();
+
         // resources/views/tasks/index.blade.php にデータを渡して表示
-        return view('tasks.index', compact('tasks'));
+        return view('tasks.index', [
+            'tasks' => $tasks,
+            'tags'  => $tags,
+            'tagId' => $tagId,
+        ]);
     }
 
     /**
@@ -60,8 +77,9 @@ class TaskController extends Controller
     public function create()
     {
         $statusOptions = Task::statusOptions();
+        $tags = Tag::orderBy('name')->get();
 
-        return view('tasks.create', compact('statusOptions'));
+        return view('tasks.create', compact('statusOptions', 'tags'));
     }
 
     /**
@@ -111,9 +129,10 @@ class TaskController extends Controller
         }
 
         $statusOptions = Task::statusOptions();
+        $tags = Tag::orderBy('name')->get();
 
         // 編集フォーム用のビューに Task を渡す
-        return view('tasks.edit', compact('task', 'statusOptions'));
+        return view('tasks.edit', compact('task', 'statusOptions', 'tags'));
     }
 
     /**
@@ -129,17 +148,30 @@ class TaskController extends Controller
             abort(403);
         }
 
-        // バリデーション（store と合わせる）
+        // バリデーション（store と揃える）
         $validated = $request->validate([
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string',
             'priority'    => 'required|integer|in:1,2,3',
             'due_date'    => 'nullable|date',
             'status'      => 'required|string|in:' . implode(',', array_keys(Task::statusOptions())),
+
+            // ★ タグ用バリデーションを追加
+            'tags'   => 'array',
+            'tags.*' => 'integer|exists:tags,id',
         ]);
 
-        // 更新
-        $task->update($validated);
+        // ★ Task 本体の更新（tags はテーブルにないので渡さない）
+        $task->update([
+            'title'       => $validated['title'],
+            'description' => $validated['description'] ?? null,
+            'priority'    => $validated['priority'],
+            'due_date'    => $validated['due_date'] ?? null,
+            'status'      => $validated['status'],
+        ]);
+
+        // ★ タグの同期（中間テーブル tag_task を更新）
+        $task->tags()->sync($validated['tags'] ?? []);
 
         // 完了後のリダイレクト
         return redirect()
