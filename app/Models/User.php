@@ -10,6 +10,12 @@ use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\Task;
 
+/**
+ * @property \Illuminate\Database\Eloquent\Collection|\App\Models\Task[] $tasks
+ * @method \Illuminate\Database\Eloquent\Relations\HasMany tasks()
+ */
+
+
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -45,7 +51,7 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-        /**
+    /**
      * ユーザーが持つタスク一覧
      *
      * 1ユーザー : 多数タスク の「1対多」リレーション
