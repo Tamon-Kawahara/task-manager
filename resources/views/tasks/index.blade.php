@@ -54,6 +54,17 @@
                                     @endforeach
                                 </select>
 
+                                {{-- ★ 並び替えを追加 --}}
+                                <select name="sort" class="border rounded px-2 py-1 pr-8">
+                                    <option value="">並び替え</option>
+                                    <option value="due_asc" {{ ($sort ?? '') === 'due_asc' ? 'selected' : '' }}>期限が近い順
+                                    </option>
+                                    <option value="due_desc" {{ ($sort ?? '') === 'due_desc' ? 'selected' : '' }}>
+                                        期限が遠い順</option>
+                                    <option value="priority_desc"
+                                        {{ ($sort ?? '') === 'priority_desc' ? 'selected' : '' }}>優先度が高い順</option>
+                                </select>
+
                                 <button class="px-4 py-1 bg-blue-600 text-white rounded">検索</button>
                             </form>
                         </div>
@@ -125,9 +136,34 @@
                                             {{ $priorityLabels[$task->priority] ?? '-' }}
                                         </td>
 
+                                        @php
+                                            $dueDate = $task->due_date;
+                                            $today = \Carbon\Carbon::today();
+
+                                            $dueClass = '';
+
+                                            if ($dueDate) {
+                                                if ($dueDate->lt($today)) {
+                                                    $dueClass = 'bg-red-50 text-red-700';
+                                                } elseif ($dueDate->equalTo($today)) {
+                                                    $dueClass = 'bg-yellow-50 text-yellow-700';
+                                                } elseif (
+                                                    $dueDate->between(
+                                                        $today->copy()->addDay(),
+                                                        $today->copy()->addDays(3),
+                                                    )
+                                                ) {
+                                                    $dueClass = 'bg-orange-50 text-orange-700';
+                                                }
+                                            }
+                                        @endphp
+
                                         <td class="px-4 py-2 border-b">
-                                            {{ optional($task->due_date)->format('Y-m-d') ?? '-' }}
+                                            <span class="px-2 py-1 rounded {{ $dueClass }}">
+                                                {{ $dueDate ? $dueDate->format('Y-m-d') : '-' }}
+                                            </span>
                                         </td>
+                                        
                                         <td class="px-4 py-2 border-b">
                                             @forelse ($task->tags as $tag)
                                                 <span class="inline-block px-2 py-0.5 text-xs rounded bg-gray-200 mr-1">

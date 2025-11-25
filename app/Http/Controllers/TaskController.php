@@ -18,21 +18,30 @@ class TaskController extends Controller
         /** @var User $user */
         $user = auth()->user();
 
-        // まずは「ベースとなるクエリ」を作っておく
+        $sort = $request->input('sort');  // 並び替え指定（後でフォームから飛んでくるやつ）
+
         $query = $user->tasks()
-            ->with('tags')   // タグを同時にロードして N+1 回避
-            ->latest();   // created_at の新しい順
+            ->with('tags');   // タグを同時にロードして N+1 回避
+
+        if ($sort === 'due_asc') {
+            // 期限が近い順
+            $query->orderBy('due_date', 'asc')->orderBy('priority', 'desc');
+        } elseif ($sort === 'due_desc') {
+            // 期限が遠い順
+            $query->orderBy('due_date', 'desc');
+        } elseif ($sort === 'priority_desc') {
+            // 優先度 高い順
+            $query->orderBy('priority', 'desc'); // 1:高, 3:低 なので asc
+        } else {
+            // デフォルト：作成日の新しい順
+            $query->latest();
+        }
 
         // キーワード検索（タイトル）
         if ($request->filled('keyword')) {
             $keyword = $request->input('keyword');
 
             $query->where('title', 'LIKE', "%{$keyword}%");
-            // 必要なら description も含められる：
-            // $query->where(function ($q) use ($keyword) {
-            //     $q->where('title', 'LIKE', "%{$keyword}%")
-            //       ->orWhere('description', 'LIKE', "%{$keyword}%");
-            // });
         }
 
         // ★ ステータス絞り込みを追加
@@ -68,6 +77,7 @@ class TaskController extends Controller
             'tasks' => $tasks,
             'tags'  => $tags,
             'tagId' => $tagId,
+            'sort'  => $sort,
         ]);
     }
 
