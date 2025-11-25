@@ -23,6 +23,8 @@ class TaskController extends Controller
 
         $query = $user->tasks()
             ->with('tags');   // タグを同時にロードして N+1 回避
+        $status = $request->input('status');
+        $hideCompleted = $request->boolean('hide_completed');
 
         if ($sort === 'due_asc') {
             // 期限が近い順
@@ -69,6 +71,11 @@ class TaskController extends Controller
             });
         }
 
+        // 「完了タスクを非表示」フラグ
+        if ($hideCompleted && $status !== \App\Models\Task::STATUS_COMPLETED) {
+            $query->where('status', '!=', \App\Models\Task::STATUS_COMPLETED);
+        }
+
         // 最後にページネーションをかける
         $tasks = $query
             ->paginate(10)       // 1ページ10件
@@ -83,6 +90,7 @@ class TaskController extends Controller
             'tags'  => $tags,
             'tagId' => $tagId,
             'sort'  => $sort,
+            'hideCompleted' => $hideCompleted,
         ]);
     }
 

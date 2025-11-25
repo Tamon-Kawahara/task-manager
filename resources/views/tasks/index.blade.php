@@ -56,7 +56,7 @@
 
                                 {{-- ★ 並び替えを追加 --}}
                                 <select name="sort" class="border rounded px-2 py-1 pr-8">
-                                    <option value="">並び替え</option>
+                                    <option value="">デフォルト</option>
                                     <option value="due_asc" {{ ($sort ?? '') === 'due_asc' ? 'selected' : '' }}>期限が近い順
                                     </option>
                                     <option value="due_desc" {{ ($sort ?? '') === 'due_desc' ? 'selected' : '' }}>
@@ -66,7 +66,13 @@
                                     <option value="custom" {{ ($sort ?? '') === 'custom' ? 'selected' : '' }}>
                                         カスタム順（ドラッグ）</option>
                                 </select>
-                                </select>
+
+                                <label class="flex items-center text-sm text-gray-700 ml-2">
+                                    <input type="checkbox" name="hide_completed" value="1"
+                                        class="mr-1 rounded border-gray-300"
+                                        {{ request('hide_completed') ? 'checked' : '' }}>
+                                    完了タスクを非表示
+                                </label>
 
                                 <button class="px-4 py-1 bg-blue-600 text-white rounded">検索</button>
                             </form>
