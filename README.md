@@ -73,26 +73,6 @@
 
 ---
 
-## 🚀 セットアップ
-
-```bash
-git clone <task-manager>
-cd <task-manager>
-
-cp .env.example .env
-php artisan key:generate
-
-# DB設定を.envで編集後
-php artisan migrate
-
-# 開発サーバー
-php artisan serve
-
-# CSS / JS ビルド
-npm install
-npm run dev
-
-
 ## 📸 スクリーンショット
 
 ### ダッシュボード（PC）
@@ -112,3 +92,24 @@ npm run dev
 
 ### タスク一覧（スマホ）
 ![タスク一覧（スマホ表示）](./docs/images/tasks-mobile.png)
+
+
+
+## 🚀 セットアップ
+
+```bash
+git clone <task-manager>
+cd <task-manager>
+
+cp .env.example .env
+php artisan key:generate
+
+# DB設定を.envで編集後
+php artisan migrate
+
+# 開発サーバー
+php artisan serve
+
+# CSS / JS ビルド
+npm install
+npm run dev
