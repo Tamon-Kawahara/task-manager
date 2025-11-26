@@ -91,3 +91,5 @@ php artisan serve
 # CSS / JS ビルド
 npm install
 npm run dev
+
+<img width="1920" height="952" alt="スクリーンショット 2025-11-26 17 42 55" src="https://github.com/user-attachments/assets/4bb3e1c5-820d-47a7-b8d1-264000497900" />
