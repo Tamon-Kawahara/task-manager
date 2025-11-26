@@ -15,93 +15,125 @@ class TaskController extends Controller
      */
     public function index(Request $request)
     {
-    // ログイン中のユーザーを取得
         /** @var User $user */
         $user = auth()->user();
 
-        $sort = $request->input('sort');  // 並び替え指定（後でフォームから飛んでくるやつ）
+        // ▼ リクエストパラメータを先に全部拾っておく
+        $sort          = $request->input('sort', '');          // 並び替え種別
+        $status        = $request->input('status');            // ステータス
+        $hideCompleted = $request->boolean('hide_completed');  // 完了非表示フラグ
+        $tagId         = $request->input('tag_id');            // タグID
+        $keyword       = $request->input('keyword');           // タイトル検索
+        $priority      = $request->filled('priority')
+            ? (int) $request->input('priority')
+            : null;
 
+        // ▼ ベースとなるクエリ
         $query = $user->tasks()
-            ->with('tags');   // タグを同時にロードして N+1 回避
-        $status = $request->input('status');
-        $hideCompleted = $request->boolean('hide_completed');
+            ->with('tags');
+        // → アーカイブ済みを除外したいならここで where('is_archived', false) とか足す
 
-        if ($sort === 'due_asc') {
-            // 期限が近い順
-            $query->orderBy('due_date', 'asc')->orderBy('priority', 'desc');
-        } elseif ($sort === 'due_desc') {
-            // 期限が遠い順
-            $query->orderBy('due_date', 'desc');
-        } elseif ($sort === 'priority_desc') {
-            // 優先度 高い順
-            $query->orderBy('priority', 'desc'); // 1:高, 3:低 なので asc
-        } elseif ($sort === 'custom') {
-            // ★ カスタム順（sort_order）
-            $query->orderBy('sort_order', 'asc')
-                ->orderBy('created_at', 'desc');
-        } else {
-            // デフォルト：作成日の新しい順
-            $query->latest();
-        }
+        // ------------------------------
+        // ① 絞り込み条件
+        // ------------------------------
 
         // キーワード検索（タイトル）
-        if ($request->filled('keyword')) {
-            $keyword = $request->input('keyword');
-
-            $query->where('title', 'LIKE', "%{$keyword}%");
+        if (!empty($keyword)) {
+            $query->where('title', 'LIKE', '%' . $keyword . '%');
         }
 
-        // ★ ステータス絞り込みを追加
-        if ($request->filled('status')) {
-            $status = $request->input('status');  // not_started / in_progress / completed のどれか
+        // ステータス絞り込み
+        if (!empty($status)) {
             $query->where('status', $status);
         }
 
         // 優先度絞り込み
-        if ($request->filled('priority')) {
-            $priority = (int) $request->priority;
+        if (!is_null($priority)) {
             $query->where('priority', $priority);
         }
 
         // タグ絞り込み
-        $tagId = $request->input('tag_id');   // フォーム側の <select name="tag_id">
         if (!empty($tagId)) {
             $query->whereHas('tags', function ($q) use ($tagId) {
                 $q->where('tags.id', $tagId);
             });
         }
 
-        // 「完了タスクを非表示」フラグ
-        if ($hideCompleted && $status !== \App\Models\Task::STATUS_COMPLETED) {
-            $query->where('status', '!=', \App\Models\Task::STATUS_COMPLETED);
+        // 「完了タスクを非表示」
+        // → すでに「ステータス=completed」で絞っているときは二重で絞らないように条件をつける
+        if ($hideCompleted && $status !== Task::STATUS_COMPLETED) {
+            $query->where('status', '!=', Task::STATUS_COMPLETED);
         }
 
-        // 最後にページネーションをかける
+        // ------------------------------
+        // ② 並び替え
+        // ------------------------------
+        switch ($sort) {
+            case 'due_asc':
+                // 期限が近い順 → 同じ期限なら優先度高い順 → ID昇順
+                $query->orderBy('due_date', 'asc')
+                    ->orderBy('priority', 'desc')
+                    ->orderBy('id', 'asc');
+                break;
+
+            case 'due_desc':
+                // 期限が遠い順 → 同じ期限なら優先度高い順
+                $query->orderBy('due_date', 'desc')
+                    ->orderBy('priority', 'desc')
+                    ->orderBy('id', 'asc');
+                break;
+
+            case 'priority_desc':
+                // 優先度が高い順（3:高, 1:低）
+                $query->orderBy('priority', 'desc')
+                    ->orderBy('due_date', 'asc')
+                    ->orderBy('id', 'asc');
+                break;
+
+            case 'custom':
+                // カスタム順（sort_order カラム前提）
+                $query->orderBy('sort_order', 'asc')
+                    ->orderBy('created_at', 'desc');
+                break;
+
+            default:
+                // デフォルト：作成日が新しい順
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+
+        // ------------------------------
+        // ③ ページネーション
+        // ------------------------------
         $tasks = $query
-            ->paginate(10)       // 1ページ10件
-            ->withQueryString(); // 検索条件をURLに維持したままページング
+            ->paginate(10)
+            ->withQueryString(); // クエリパラメータを維持してページング
 
         // タグ一覧（セレクトボックス用）
         $tags = Tag::orderBy('name')->get();
 
-        // resources/views/tasks/index.blade.php にデータを渡して表示
         return view('tasks.index', [
-            'tasks' => $tasks,
-            'tags'  => $tags,
-            'tagId' => $tagId,
-            'sort'  => $sort,
+            'tasks'         => $tasks,
+            'tags'          => $tags,
+            'tagId'         => $tagId,
+            'sort'          => $sort,
             'hideCompleted' => $hideCompleted,
         ]);
     }
+
 
     /**
      * Show the form for creating a new resource.
      */
     public function create()
     {
+        // ステータス選択肢（未着手 / 進行中 / 完了）
         $statusOptions = Task::statusOptions();
+
+        // タグ一覧（チェックボックス or セレクト用）
         $tags = Tag::orderBy('name')->get();
 
+        // resources/views/tasks/create.blade.php を表示
         return view('tasks.create', compact('statusOptions', 'tags'));
     }
 

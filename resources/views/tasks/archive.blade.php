@@ -6,7 +6,7 @@
     </x-slot>
 
     <div class="py-8">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
             {{-- フラッシュメッセージ --}}
             @if (session('success'))
@@ -18,23 +18,28 @@
             {{-- 戻るリンク --}}
             <div class="mb-4">
                 <a href="{{ route('tasks.index') }}"
-                   class="text-sm text-blue-600 hover:underline">
-                    ← タスク一覧に戻る
+                    class="inline-flex items-center text-sm text-blue-600 hover:underline">
+                    <span class="mr-1">←</span>タスク一覧に戻る
                 </a>
             </div>
 
             @if ($archivedTasks->isEmpty())
                 {{-- アーカイブが0件のとき --}}
-                <p class="text-sm text-gray-500">
-                    アーカイブされたタスクはありません。
-                </p>
+                <div class="bg-white border border-gray-100 rounded-lg px-4 py-6 text-center shadow-sm">
+                    <p class="text-sm text-gray-500">
+                        アーカイブされたタスクはまだありません。
+                    </p>
+                </div>
             @else
-                {{-- アーカイブ済みタスク一覧 --}}
-                <div class="space-y-2">
+                {{-- アーカイブ済みタスク一覧（レスポンシブカード） --}}
+                <div class="space-y-3">
                     @foreach ($archivedTasks as $task)
-                        <div class="flex items-center justify-between bg-white border border-gray-100 rounded-lg px-4 py-3 shadow-sm">
-                            <div>
-                                <p class="text-sm font-semibold text-gray-900">
+                        <div
+                            class="bg-white border border-gray-100 rounded-lg px-4 py-3 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+
+                            {{-- タスク情報 --}}
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold text-gray-900 truncate">
                                     {{ $task->title }}
                                 </p>
                                 <p class="text-xs text-gray-500 mt-1">
@@ -42,17 +47,18 @@
                                 </p>
                             </div>
 
-                            <div class="flex items-center gap-2">
-                                {{-- 復元ボタン --}}
+                            {{-- 復元ボタン --}}
+                            <div class="flex justify-end sm:justify-start">
                                 <form method="POST" action="{{ route('tasks.restore', $task->id) }}">
                                     @csrf
                                     @method('PATCH')
                                     <button
-                                        class="px-3 py-1 text-xs font-medium rounded border border-blue-600 text-blue-600 hover:bg-blue-50">
+                                        class="px-3 py-1.5 text-xs font-medium rounded border border-blue-600 text-blue-600 hover:bg-blue-50">
                                         復元する
                                     </button>
                                 </form>
                             </div>
+
                         </div>
                     @endforeach
                 </div>
