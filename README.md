@@ -1,66 +1,93 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Task Manager（Laravel × Tailwind CSS）
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+認証付きのタスク管理アプリケーションです。  
+タスクの登録・編集・検索・絞り込み・タグ管理機能に加えて、  
+レスポンシブ対応やドラッグ＆ドロップによる並び替えなど、  
+実務レベルの UI/UX を意識して構築しました。
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 📌 主な機能
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### ■ タスク
+- 新規作成 / 編集 / 削除（ソフトデリート）
+- タスクのステータス管理（未着手 / 進行中 / 完了）
+- 優先度管理（低・中・高）
+- 期限設定 & 期限接近の色分け表示
+- タグの複数選択
+- アーカイブ一覧 / 復元
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### ■ 絞り込み・検索
+- キーワード検索（タイトル部分一致）
+- ステータスフィルタ
+- 優先度フィルタ
+- タグフィルタ
+- 完了タスクの非表示
+- 並び替え（期限 / 優先度 / カスタム順）
 
-## Learning Laravel
+### ■ 並び替え（ドラッグ & ドロップ）
+- Sortable.js を使用
+- 「カスタム順」選択時のみドラッグ可能
+- 並び替え内容は DB に保存
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### ■ タグ管理
+- 追加 / 削除
+- スラッグ自動生成
+- タスクとの多対多リレーション
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### ■ 認証
+- Breeze によるログイン / 登録 / パスワード管理
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## 🛠 技術スタック
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+| 技術 | 内容 |
+|------|------|
+| Laravel 10 | バックエンドフレームワーク |
+| Breeze | 認証機能 |
+| Tailwind CSS | UI フレームワーク |
+| Sortable.js | 並び替え処理 |
+| MySQL / SQLite | データベース |
+| PHP 8.1 | 実行環境 |
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+## 🧩 設計意図・工夫した点
 
-## Contributing
+### 1. **レスポンシブ UI の最適化**
+- スマホ（~767px）：カード型で縦読みしやすい
+- タブレット（768〜1023px）：行数削減しつつ情報はテーブルで把握可能
+- PC（1024px~）：テーブル型で一覧性を優先
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 2. **カスタム順ソートの実装**
+管理しやすさを強化するため、  
+クライアント側で並び替え → サーバーへ保存する仕組みを導入。
 
-## Code of Conduct
+### 3. **タグ管理の柔軟性**
+多対多リレーションを利用し、  
+タスクに複数タグを設定できるよう設計。
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 4. **ソフトデリートで安全性確保**
+誤削除を防ぐため、タスクは削除時にアーカイブへ移動。
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## 🚀 セットアップ
 
-## License
+```bash
+git clone <task-manager>
+cd <task-manager>
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+cp .env.example .env
+php artisan key:generate
+
+# DB設定を.envで編集後
+php artisan migrate
+
+# 開発サーバー
+php artisan serve
+
+# CSS / JS ビルド
+npm install
+npm run dev
