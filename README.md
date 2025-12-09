@@ -98,8 +98,8 @@
 ## 🚀 セットアップ
 
 ```bash
-git clone <task-manager>
-cd <task-manager>
+git clone https://github.com/Tamon-Kawahara/task-manager.git
+cd task-manager
 
 cp .env.example .env
 php artisan key:generate
